@@ -3,15 +3,31 @@ import pdb
 import numpy as np
 import pandas as pd
 
+'''
+    1. Dlaczego yearjoined nie ma kolumny users ?
+'''
+
 ## membership status
-years      = ['2014', '2015', '2016', '2017', '2018']
+# 2 lists
+years = ['2014', '2015', '2016', '2017', '2018']
 userStatus = ['bronze', 'silver', 'gold', 'inactive']
 
-userYears = np.random.choice(years, 1000, p = [0.1, 0.1, 0.15, 0.30, 0.35])
-userStats = np.random.choice(userStatus, 1000, p = [0.5, 0.3, 0.1, 0.1])
+# Roszerzona lista do 1000 elementow -> rok zaczecia membershipu
+userYears = np.random.choice(years, 1000, p=[0.1, 0.1, 0.15, 0.30, 0.35])
+print("Rozszrzenie próbki do 1000 elementów")
+print(len(userYears))
+print(userYears[0:10])
 
+# Roszerzona lista do 100 elementow -> status tego membershipu
+userStats = np.random.choice(userStatus, 1000, p=[0.5, 0.3, 0.1, 0.1])
+print("Rozszrzenie próbki do 1000 elementów")
+print(len(userStats))
+print(userStats[0:10])
+
+# Zbudowanie dataframe. 2 kolumny -> userYears, userStats
 yearJoined = pd.DataFrame({'yearJoined': userYears,
-                           'userStats': userStats})
+                           'memberStats': userStats})
+print(yearJoined)
 
 ## email behavior
 NUM_EMAILS_SENT_WEEKLY = 3
@@ -86,10 +102,14 @@ def produce_donations(period_rng, user_behavior, num_emails, use_id, user_join_y
     
 
 ## run it
+# Lista funkcji generujacych ilosc przeczytanych maili
 behaviors = [never_opens, constant_open_rate, increasing_open_rate, decreasing_open_rate]
+print(behaviors)
 user_behaviors = np.random.choice(behaviors, 1000, [0.2, 0.5, 0.1, 0.2])
                                         
-rng = pd.period_range('2015-02-14', '2018-06-01', freq = 'W')
+rng = pd.period_range('2015-02-14', '2018-06-01', freq='W')
+
+# Tutaj sa tworzone puste emails
 emails = pd.DataFrame({'user': [], 'week': [], 'emailsOpened':[]})
 donations = pd.DataFrame({'user': [], 'amount': [], 'timestamp': []})
 
@@ -120,10 +140,10 @@ for idx in range(yearJoined.shape[0]):
 
 ## get rid of zero donations and zero emails
 emails = emails[emails.emailsOpened != 0]
-yearJoined.index.name = 'user'
+yearJoined.index.name = 'memberid'
 
-yearJoined.to_csv('data/year_joined.csv', index = False)
-donations.to_csv( 'data/donations.csv',   index = False)
-emails.to_csv(    'data/emails.csv',      index = False)
+yearJoined.to_csv('data/year_joined.csv',)
+donations.to_csv( 'data/donations.csv', index = False)
+emails.to_csv(    'data/emails.csv', index = False)
 
 
