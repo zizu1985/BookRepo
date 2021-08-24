@@ -510,7 +510,7 @@ View(ausbeer)
 ###########################################################
 ###########################################################
 ###########################################################
-# Ex. 5
+# Ex. 5 - data modeling with fancy
 ?fancy
 
 autoplot(fancy)
@@ -546,25 +546,257 @@ View(fancy_df)
 
 
 fit.fancy = tslm(
-  Sales ~ trend + season + Festival,
+  log(Sales) ~ trend + season,
   data = fancy_df
 )
 summary(fit.fancy)
 
+#Coefficients: (1 not defined because of singularities)
+#Estimate Std. Error t value Pr(>|t|)    
+#(Intercept) -6449.04    3451.71  -1.868  0.06584 .  
+#trend         319.04      37.93   8.411 2.89e-12 ***
+#season2       996.98    4459.91   0.224  0.82376    
+#season3      5216.36    4460.39   1.169  0.24612    
+#season11    13989.73    4475.85   3.126  0.00257 ** 
 #season12    40123.26    4479.22   8.958 2.81e-13 ***
 #Festival          NA         NA      NA       NA    
 
+# Festival w szczegolnosci pozytywny efekt
+# Trend wzrostowy
+# Najlepsza sprzedaz w miesiacu 12
+# Zmienna dummy - nic nie dala. Dlaczego ?
+
+checkresiduals(fit.fancy)
+
+# Tak, jest troche informacji w nich
+
+boxplot(residuals(fit.fancy))
+# Srednia nie jest najgorsza, ale sa miesiace gdzie sa duzo odchylenia
+
+newdata1994 <- data.frame(Time = c("sty 1994","lut 1994","mar 1994","kwi 1994","maj 1994","cze 1994","lip 1994","sie 1994","wrz 1994","paŸ 1994","lis 1994","gru 1994"),
+                             Festival = c(0,0,0,0,0,0,0,0,0,0,0,0))
+fcast.fancy1994 <- forecast(fit.fancy, newdata = newdata1994)
+summary(fcast.fancy1994)
+
+
+#  Forecasts:
+#  Point Forecast     Lo 80    Hi 80     Lo 95    Hi 95
+#Jan 1994       20669.22  8893.132 32445.31  2517.513 38820.93
+#Feb 1994       21985.24 10209.150 33761.33  3833.531 40136.95
+#Mar 1994       26523.66 14747.566 38299.75  8371.947 44675.36
+#Apr 1994       23570.09 11793.996 35346.18  5418.377 41721.79
+#May 1994       23572.14 11796.055 35348.23  5420.436 41723.85
+#Jun 1994       24515.95 12739.858 36292.04  6364.238 42667.66
+#Jul 1994       26765.85 14989.760 38541.94  8614.141 44917.56
+#Aug 1994       27528.37 15752.283 39304.46  9376.664 45680.08
+#Sep 1994       28636.79 16860.705 40412.88 10485.086 46788.50
+#Oct 1994       29634.61 17858.518 41410.70 11482.898 47786.32
+#Nov 1994       37849.34 26073.249 49625.43 19697.630 56001.05
+#Dec 1994       64301.90 52525.813 76077.99 46150.194 82453.61
+
+newdata1995 <- data.frame(Time = c("sty 1995","lut 1995","mar 1995","kwi 1995","maj 1995","cze 1995","lip 1995","sie 1995","wrz 1995","paŸ 1995","lis 1995","gru 1995"),
+                      Festival = c(0,0,0,0,0,0,0,0,0,0,0,0))
+fcast.fancy1995 <- forecast(fit.fancy, newdata = newdata1995)
+summary(fcast.fancy1995)
+
+# Problem - podaje dla 1994, zamiast 1995
+# Solution - retrain model ? -> No
+# Predict in one move ? -> Tak
+
+fit.fancy = tslm(
+  log(Sales) ~ trend + season,
+  data = fancy_df
+)
+summary(fit.fancy)
+
+newdata <- data.frame(Time = c("sty 1994","lut 1994","mar 1994","kwi 1994","maj 1994","cze 1994","lip 1994","sie 1994","wrz 1994","paŸ 1994","lis 1994","gru 1994",
+                                   "sty 1995","lut 1995","mar 1995","kwi 1995","maj 1995","cze 1995","lip 1995","sie 1995","wrz 1995","paŸ 1995","lis 1995","gru 1995",
+                                   "sty 1996","lut 1996","mar 1996","kwi 1996","maj 1996","cze 1996","lip 1996","sie 1996","wrz 1996","paŸ 1996","lis 1996","gru 1996"),
+                          Festival = c(0,0,0,0,0,0,0,0,0,0,0,0,
+                                       0,0,0,0,0,0,0,0,0,0,0,0,
+                                       0,0,0,0,0,0,0,0,0,0,0,0))
+fcast.fancy <- forecast(fit.fancy, newdata = newdata)
+summary(fcast.fancy)
+
+#Forecasts:
+#  Point Forecast     Lo 80    Hi 80     Lo 95    Hi 95
+
+#Jan 1994       20669.22  8893.132 32445.31  2517.513 38820.93
+#Feb 1994       21985.24 10209.150 33761.33  3833.531 40136.95
+#Mar 1994       26523.66 14747.566 38299.75  8371.947 44675.36
+#Apr 1994       23570.09 11793.996 35346.18  5418.377 41721.79
+#May 1994       23572.14 11796.055 35348.23  5420.436 41723.85
+#Jun 1994       24515.95 12739.858 36292.04  6364.238 42667.66
+#Jul 1994       26765.85 14989.760 38541.94  8614.141 44917.56
+#Aug 1994       27528.37 15752.283 39304.46  9376.664 45680.08
+#Sep 1994       28636.79 16860.705 40412.88 10485.086 46788.50
+#Oct 1994       29634.61 17858.518 41410.70 11482.898 47786.32
+#Nov 1994       37849.34 26073.249 49625.43 19697.630 56001.05
+#Dec 1994       64301.90 52525.813 76077.99 46150.194 82453.61
+
+#Jan 1995       24497.68 12589.849 36405.52  6142.903 42852.46
+#Feb 1995       25813.70 13905.867 37721.53  7458.921 44168.48
+#Mar 1995       30352.12 18444.283 42259.95 11997.337 48706.90
+#Apr 1995       27398.55 15490.713 39306.38  9043.767 45753.33
+#May 1995       27400.61 15492.771 39308.44  9045.825 45755.38
+#Jun 1995       28344.41 16436.574 40252.24  9989.628 46699.19
+#Jul 1995       30594.31 18686.477 42502.14 12239.531 48949.09
+#Aug 1995       31356.83 19449.000 43264.67 13002.054 49711.61
+#Sep 1995       32465.25 20557.421 44373.09 14110.475 50820.03
+#Oct 1995       33463.07 21555.234 45370.90 15108.288 51817.85
+#Nov 1995       41677.80 29769.966 53585.63 23323.020 60032.58
+#Dec 1995       68130.36 56222.530 80038.20 49775.584 86485.14
+
+#Jan 1996       28326.14 16259.242 40393.04  9726.176 46926.11
+#Feb 1996       29642.16 17575.260 41709.06 11042.195 48242.13
+#Mar 1996       34180.58 22113.676 46247.48 15580.611 52780.54
+#Apr 1996       31227.01 19160.106 43293.91 12627.041 49826.97
+#May 1996       31229.07 19162.165 43295.97 12629.099 49829.03
+#Jun 1996       32172.87 20105.968 44239.77 13572.902 50772.84
+#Jul 1996       34422.77 22355.870 46489.67 15822.805 53022.74
+#Aug 1996       35185.29 23118.393 47252.20 16585.328 53785.26
+#Sep 1996       36293.72 24226.815 48360.62 17693.749 54893.68
+#Oct 1996       37291.53 25224.628 49358.43 18691.562 55891.50
+#Nov 1996       45506.26 33439.359 57573.16 26906.293 64106.23
+#Dec 1996       71958.82 59891.923 84025.73 53358.858 90558.79
+
+# How to improve -> a) add constant to prediction b) use sqrt or log-log model
+
+######################################################################################################################
+######################################################################################################################
+######################################################################################################################
+
 ###########################################################
-###########################################################
-###########################################################
+# Ex. 6  - gasoline series
+?gasoline
+autoplot(gasoline, xlab="Year")
+
+gasoline_data = window(gasoline, end=2004)
+autoplot(gasoline_data, xlab="Year")
+View(gasoline_data)
+
+gasoline_df <- data.frame(Barrels = gasoline_data, as.numeric(time(gasoline_data)))
+View(gasoline_df)
+# do konca 2003 jest, wiec
+
+gasoline_data = window(gasoline, end=2005)
+autoplot(gasoline_data, xlab="Year")
+gasoline_df <- data.frame(Barrels = gasoline_data, as.numeric(time(gasoline_data)))
+names(gasoline_df) <- c("Barrels","Time")
 
 
+# Fit a harmonic regression with trend to the data
+fit.exp <- tslm(gasoline_data ~ trend, lambda = 0)
+fit.fourier <- tslm(gasoline_data ~ trend + fourier(gasoline_data, K=2))
+fit.fourier5 <- tslm(gasoline_data ~ trend + fourier(gasoline_data, K=5))
+
+# autoplot
+autoplot(gasoline_data) +
+  autolayer(fitted(fit.exp), series = "Exponential") +
+  autolayer(fitted(fit.fourier), series = "Fourier") +
+  autolayer(fitted(fit.fourier5), series = "Fourier K=5") +
+  xlab("Year") + ylab("Production in mln barrels") +
+  ggtitle("Mln barrels") +
+  guides(colour = guide_legend(title = " "))
+
+# K=2 ju¿ wystarczajaco dobrze opisuje przebieg krzywej
+
+# Dobranie parametru K w celu minimalizacji AICc / CV
+CV(fit.fourier)
+#CV           AIC          AICc           BIC         AdjR2 
+#8.136854e-02 -1.819113e+03 -1.818957e+03 -1.787001e+03  8.269569e-01 
+
+CV(fit.fourier5)
+
+fit.fourier10 <- tslm(gasoline_data ~ trend + fourier(gasoline_data, K=10))
+CV(fit.fourier10)
+#CV           AIC          AICc           BIC         AdjR2 
+#7.135754e-02 -1.915014e+03 -1.913441e+03 -1.809500e+03  8.516102e-01 
+
+fit.fourier20 <- tslm(gasoline_data ~ trend + fourier(gasoline_data, K=20))
+CV(fit.fourier20)
+#CV           AIC          AICc           BIC         AdjR2 
+#7.135754e-02 -1.915014e+03 -1.913441e+03 -1.809500e+03  8.516102e-01 
+
+fit.fourier15 <- tslm(gasoline_data ~ trend + fourier(gasoline_data, K=15))
+CV(fit.fourier15)
+
+# Optymalna wartosc dla K=10
+
+# Check residuals - minimalnie sa skorelowane, ale nie znaczaco
+# nie powinno miec wpluwy na przewidywania
+checkresiduals(fit.fourier10)
+
+# Przewidywanie wartosci dla roku 2005 za pomoca modelu z szeregami fouriera
+h <- 53
+fc <- forecast(fit.fourier10, newdata=data.frame(fourier(gasoline_data,10,h)))
+
+# B³¹d w poleceniu '...fourier(x, K, NROW(x) + (1:h))':
+# K must be not be greater than period/2
+# https://stackoverflow.com/questions/28841142/forecast-throws-error-k-must-be-not-be-greater-than-period-2
+# Solution: nie wstawiles w miejsce x naszych danych
+
+autoplot(gasoline) +
+  autolayer(fitted(fit.fourier10), series = "Fourier 10") +
+  autolayer(fc, series = "Fourier 10 - forecasting", PI=FALSE) +
+  xlab("Year") + ylab("Production in mln barrels") +
+  ggtitle("Mln barrels") +
+  guides(colour = guide_legend(title = " "))
+
+# Zjawisko - overfitting. W modelu dane sfitowane wygladaly dobrze
+# Przewidywania roznie sie od wartosci rzeczywistych. Np zle przewidzial sezonowosc w jednym z lat.
+
+##################################################
+##################################################
+##################################################
+# Ex. 7 - huron 
+
+?huron
+autoplot(huron)
+View(huron)
+
+huron_df <- data.frame(Height = huron, as.character(time(huron)))
+names(huron_df) <- c("Height","Time")
+View(huron_df)
 
 
+fit.huron = tslm(
+  Height ~ trend,
+  data = huron_df
+)
+summary(fit.huron)
+
+#################################################
+
+t <- time(huron)
+t.break1 <- 1915
+tb1 <- ts(pmax(0, t - t.break1), start = 1875)
+fit.pw <- tslm(huron ~ t + tb1)
+summary(fit.huron)
+
+fit.huron = tslm(
+  huron ~ t
+)
+summary(fit.huron)
 
 
+autoplot(huron) +
+  autolayer(fitted(fit.huron), series = "Linear regression") +
+  autolayer(fitted(fit.pw), series = "Picewise regression") +
+  xlab("Year") + ylab("Production in mln barrels") +
+  ggtitle("Mln barrels") +
+  guides(colour = guide_legend(title = " "))
 
+View(huron)
+h <- 20
+fc <- forecast(fit.huron, newdata=data.frame(t=c(1973,1974,1975,1976,1977,1978,1979,1980)))
+fc1 <- forecast(fit.pw, newdata=data.frame(t=c(1973,1974,1975,1976,1977,1978,1979,1980),tb1=c(1,1,1,1,1,1,1,1)))
 
+autoplot(huron) +
+  autolayer(fc, series = "Linear regression - forecasting", PI=FALSE) +
+  autolayer(fc1, series = "Picewise regression - forecasting", PI=FALSE) +
+  xlab("Year") + ylab("Production in mln barrels") +
+  ggtitle("Mln barrels") +
+  guides(colour = guide_legend(title = " "))
 
-
-
+# Picewise zachowuje sie bardzo zle
